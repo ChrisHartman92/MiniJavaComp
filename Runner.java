@@ -1,7 +1,8 @@
 import java_cup.runtime.Symbol;
+import syntaxtree.*;
+import visitor.*;
 import java.io.*;
 import java.util.*;
-import syntaxtree.*;
 
 public class Runner
 {
@@ -13,11 +14,10 @@ public class Runner
 			System.out.println("USAGE: java Runner file.txt");
 			System.exit(1);
 		}
-		Project project;
 		try
 		{
 			pCup parser_obj = new pCup(new lexxer(new FileInputStream(args[0])));
-			project = parser_obj.parse();
+			parser_obj.parse();
 		}
 		catch (IOException e)
 		{

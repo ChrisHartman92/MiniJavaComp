@@ -1,11 +1,14 @@
 import java_cup.runtime.Symbol;
 import syntaxtree.*;
+import visitor.*;
+
+scan with {: return lex.next_token(); :};
 
 parser code {:
 	lexxer lex;
 	public pCup(lexxer lexx)
 	{
-		super(lex);
+		super(lexx);
 		lex = lexx;
 	}
 
@@ -35,12 +38,25 @@ terminal LBRACE, RBRACE;
 terminal LPAR, RPAR;
 terminal LBRACK, RBRACK;
 terminal IDENT;
-terminal IMM;
+terminal Integer IMM;
 
 //NONTERMINAL
-non terminal Goal, MainClass, ClassDeclaration, VarDeclaration, MethodDeclaration, Type, Statement, Expression, Identifier;
+non terminal Program Goal;
+non terminal MainClass MainClass;
+non terminal ClassDecl ClassDeclaration;
+non terminal VarDecl VarDeclaration; 
+non terminal MethodDecl MethodDeclaration;
+non terminal Type Type;
+non terminal Statement Statement;
+non terminal Exp Expression; 
+non terminal Identifier Identifier;
 
-non terminal CDL, VDL, MDL, PDL, SDL, EDL;
+non terminal ClassDeclList CDL; 
+non terminal VarDeclList VDL; 
+non terminal MethodDeclList MDL; 
+non terminal FormalList PDL;
+non terminal StatementList SDL;
+non terminal ExpList EDL;
 
 precedence left AND;
 precedence left EQUALS;
@@ -56,6 +72,9 @@ start with Goal;
 
 Goal ::= MainClass:main CDL:cdl
 	{:
+		PrettyPrintVisitor ppv = new PrettyPrintVisitor();
+		ppv.visit(new Program(main,cdl));
+
 		RESULT = new Program(main,cdl);
 	:}
 	;
@@ -144,7 +163,7 @@ EDL ::=
 	{:
 		ExpList edl = new ExpList();
 		edl.addElement(exp);
-		RESULT = exp;
+		RESULT = edl;
 	:}	
 	;
 
@@ -311,12 +330,12 @@ Expression ::= Expression:exp AND Expression:expp
 	|
 	LPAR Expression:exp RPAR
 	{:
-		RESULT = e;
+		RESULT = exp;
 	:}
 	;
 
 Identifier ::= IDENT:id
 	{:
-		RESULT = new Identifier(id);
+		RESULT = new Identifier(id.toString());
 	:}
 	;

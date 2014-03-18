@@ -63,6 +63,7 @@ WhiteSpace = [\r\n\z\t\f ]
 "["		{return new Symbol(LBRACK,yyline+1,yycolumn+1);}
 "]"		{return new Symbol(RBRACK,yyline+1,yycolumn+1);}
 {Identifier}	{return new Symbol(CLASS,yyline+1,yycolumn+1,yytext());}
-{Integer}	{return new Symbol(CLASS,yyline+1,yycolumn+1, yytext());}
+{Integer}	{return new Symbol(CLASS,yyline+1,yycolumn+1, Integer.parseInt(yytext()));}
 {WhiteSpace}	{}
+" "		{}
 .|\n		{}
