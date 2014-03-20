@@ -14,7 +14,19 @@ parser code {:
 
 	public void syntax_error(Symbol s)
 	{
-		System.out.println("Syntax error at line: " + s.left + ", column: " + s.right);
+		try
+		{
+			System.out.println("Syntax error at line: " + s.left + ", column: " + s.right + ", toString: " + s.value.toString());
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public static void print(String s)
+	{
+		System.out.println(s);
 	}
 :};
 
@@ -41,7 +53,7 @@ terminal IDENT;
 terminal Integer IMM;
 
 //NONTERMINAL
-non terminal Program Goal;
+non terminal Goal;
 non terminal MainClass MainClass;
 non terminal ClassDecl ClassDeclaration;
 non terminal VarDecl VarDeclaration; 
@@ -59,69 +71,69 @@ non terminal StatementList SDL;
 non terminal ExpList EDL;
 
 precedence left AND;
-precedence left EQUALS;
 precedence left LESS;
 precedence left PLUS, MINUS;
 precedence left TIMES;
 precedence left EXCL;
-precedence left LBRACK;
-precedence left DOT;
-precedence left IDENT;
 
 start with Goal;
 
 Goal ::= MainClass:main CDL:cdl
 	{:
 		PrettyPrintVisitor ppv = new PrettyPrintVisitor();
-		ppv.visit(new Program(main,cdl));
-
-		RESULT = new Program(main,cdl);
+		Program pg = new Program(main,cdl);
+		ppv.visit(pg);
+		RESULT = pg;
 	:}
 	;
 
-CDL ::= 
+CDL ::= CDL:cdl ClassDeclaration:cd
 	{:
-		RESULT = new ClassDeclList();
-	:}
-	|
-	CDL:cdl ClassDeclaration:cd
-	{:
+		System.out.println("CDL1");
+
+		if(cdl == null)
+		{
+			cdl = new ClassDeclList();
+		}
 		cdl.addElement(cd);
 		RESULT = cdl;
 	:}
+	|
+	{:
+		System.out.println("CDL2");
+		RESULT = new ClassDeclList();
+	:}
 	;
 
-VDL ::= 
+VDL ::= VDL:vdl VarDeclaration:vd
 	{:
-		RESULT = new VarDeclList();
-	:}
-	|
-	VDL:vdl VarDeclaration:vd
-	{:
+		System.out.println("VDL1");
 		vdl.addElement(vd);
 		RESULT = vdl;	
 	:}
+	|
+	{:
+		System.out.println("VDL2");
+		RESULT = new VarDeclList();
+	:}
 	;
 
-MDL ::= 
+MDL ::= MDL:mdl MethodDeclaration:md
 	{:
-		RESULT = new MethodDeclList();
-	:}
-	|
-	MDL:mdl MethodDeclaration:md
-	{:
+		System.out.println("MDL1");
 		mdl.addElement(md);
 		RESULT = mdl;
 	:}
+	|
+	{:
+		System.out.println("MDL2");
+		RESULT = new MethodDeclList();
+	:}
 	;
 
-PDL ::= 
+PDL ::= PDL:pdl COMMA Type:ty Identifier:id
 	{:
-		RESULT = new FormalList();
-	:}
-	|
-	PDL:pdl COMMA Type:ty Identifier:id
-	{:
+		System.out.println("PDL1");
 		Formal form = new Formal(ty,id);
 		pdl.addElement(form);
 		RESULT = pdl;
@@ -129,213 +141,255 @@ PDL ::=
 	|
 	Type:ty Identifier:id
 	{:
+		System.out.println("PDL2");
 		FormalList pdl = new FormalList();
 		Formal form = new Formal(ty,id);
 		pdl.addElement(form);
 		RESULT = pdl;	
 	:}
+	|
+	{:
+		System.out.println("PDL3");
+		RESULT = new FormalList();
+	:}
 	;
 
-SDL ::= 
+SDL ::= Statement:stat SDL:sdl
 	{:
-		RESULT = new StatementList();
-	:}
-	|
-	SDL:sdl Statement:stat
-	{:
+		System.out.println("SDL1");
 		sdl.addElement(stat);
 		RESULT = sdl;
 	:}
+	|
+	{:
+		System.out.println("SDL2");
+		RESULT = new StatementList();
+	:}
 	;
 
-EDL ::= 
-	{: 
-		RESULT = new ExpList();
-	:}
-	|
-	EDL:edl COMMA Expression:exp
+EDL ::= EDL:edl COMMA Expression:exp
 	{:
+		System.out.println("EDL1");
 		edl.addElement(exp);
 		RESULT = edl;
 	:}
 	|
 	Expression:exp
 	{:
+		System.out.println("EDL2");
 		ExpList edl = new ExpList();
 		edl.addElement(exp);
 		RESULT = edl;
-	:}	
+	:}
+	|
+	{:
+		System.out.println("EDL3");
+		RESULT = new ExpList();
+	:}
 	;
 
 MainClass ::= CLASS Identifier:id LBRACE PUBLIC STATIC VOID MAIN LPAR STRING LBRACK RBRACK Identifier:idd RPAR LBRACE Statement:stat RBRACE RBRACE
 	{:
+		System.out.println("Main done");
 		RESULT = new MainClass(id,idd,stat);	
 	:}
 	;
 
 ClassDeclaration ::= CLASS Identifier:id EXTENDS Identifier:idd LBRACE VDL:vdl MDL:mdl RBRACE
 	{:
+		System.out.println("Class dec");
 		RESULT = new ClassDeclExtends(id,idd,vdl,mdl);
 	:}
 	|
 	CLASS Identifier:id LBRACE VDL:vdl MDL:mdl RBRACE
 	{:
+		System.out.println("ClassDec done");
 		RESULT = new ClassDeclSimple(id,vdl,mdl);
 	:}
 	;
  
 VarDeclaration ::= Type:ty Identifier:id SEMI
 	{:
+		System.out.println("VarDec");
 		RESULT = new VarDecl(ty,id);
 	:}
 	;
 
 MethodDeclaration ::= PUBLIC Type:ty Identifier:id LPAR PDL:pdl RPAR LBRACE VDL:vdl SDL:sdl RETURN Expression:exp SEMI RBRACE
 	{:
+		System.out.println("MethodDec");
 		RESULT = new MethodDecl(ty,id,pdl,vdl,sdl,exp);
 	:}
 	;
 	
 Type ::= INT LBRACK RBRACK
-	{: 
+	{:
+		System.out.println("Type1");
 		RESULT = new IntArrayType();
 	:}
 	|
 	BOOL
 	{: 
+		System.out.println("Type2");
 		RESULT = new BooleanType();
 	:}
 	|
 	INT
 	{:
+		System.out.println("Type3");
 		RESULT = new IntegerType();
 	:}
 	|
 	Identifier:id
 	{:
+		System.out.println("Type4");
 		RESULT = new IdentifierType(id.toString());
 	:}
 	;
 
 Statement ::= LBRACE SDL:sdl RBRACE
 	{:
+		System.out.println("Stat1");
 		RESULT = new Block(sdl);
 	:}
 	|
 	IF LPAR Expression:exp RPAR Statement:stat ELSE Statement:statt
 	{:
+		System.out.println("Stat2");
 		RESULT = new If(exp,stat,statt);
 	:}
 	|
 	WHILE LPAR Expression:exp RPAR Statement:stat
 	{:
+		System.out.println("Stat3");
 		RESULT = new While(exp,stat);
 	:}
 	|
 	PRINT LPAR Expression:exp RPAR SEMI
 	{:
+		System.out.println("Stat4");
 		RESULT = new Print(exp);
 	:}
 	|
 	Identifier:id EQUALS Expression:exp SEMI
 	{:
+		System.out.println("Stat5");
 		RESULT = new Assign(id,exp);
 	:}
 	|
 	Identifier:id LBRACK Expression:exp RBRACK EQUALS Expression:expp SEMI
 	{:
+		System.out.println("Stat6");
 		RESULT = new ArrayAssign(id,exp,expp);
 	:}
 	;
 
 Expression ::= Expression:exp AND Expression:expp
 	{:
+		System.out.println("Exp1");
 		RESULT = new And(exp,expp);
 	:}
 	|
 	Expression:exp LESS Expression:expp
 	{:
+		System.out.println("Exp2");
 		RESULT = new LessThan(exp,expp);
 	:}
 	|
 	Expression:exp PLUS Expression:expp
 	{:
+		System.out.println("Exp3");
 		RESULT = new Plus(exp,expp);
 	:}
 	|
 	Expression:exp MINUS Expression:expp
 	{:
+		System.out.println("Exp4");
 		RESULT = new Minus(exp,expp);
 	:}
 	|
 	Expression:exp TIMES Expression:expp
 	{:
+		System.out.println("Exp5");
 		RESULT = new Times(exp,expp);
 	:}
 	|
 	Expression:exp LBRACK Expression:expp RBRACK
 	{:
+		System.out.println("Exp6");
 		RESULT = new ArrayLookup(exp,expp);
 	:}
 	|
 	Expression:exp DOT LENGTH
 	{:
+		System.out.println("Exp7");
 		RESULT = new ArrayLength(exp);
 	:}
 	|
 	Expression:exp DOT Identifier:id LPAR EDL:edl RPAR
 	{:
+		System.out.println("Exp8");
 		RESULT = new Call(exp,id,edl);
 	:}
 	|
 	IMM:imm
 	{:
+		System.out.println("Exp9");
 		RESULT = new IntegerLiteral(imm);
 	:}
 	|
 	TRUE
 	{:
+		System.out.println("Exp10");
 		RESULT = new True();
 	:}
 	|
 	FALSE
 	{:
+		System.out.println("Exp11");
 		RESULT = new False();
 	:}
 	|
 	Identifier:id
 	{:
+		System.out.println("Exp12");
 		RESULT = new IdentifierExp(id.toString());
 	:}
 	|
 	THIS
 	{:
+		System.out.println("Exp13");
 		RESULT = new This();
 	:}
 	|
 	NEW INT LBRACK Expression:exp RBRACK
 	{:
+		System.out.println("Exp14");
 		RESULT = new NewArray(exp);
 	:}
 	|
 	NEW Identifier:id LPAR RPAR
 	{:
+		System.out.println("Exp15");
 		RESULT = new NewObject(id);
 	:}
 	|
 	EXCL Expression:exp
 	{:
+		System.out.println("Exp16");
 		RESULT = new Not(exp);
 	:}
 	|
 	LPAR Expression:exp RPAR
 	{:
+		System.out.println("Exp17");
 		RESULT = exp;
 	:}
 	;
 
 Identifier ::= IDENT:id
 	{:
+		System.out.println("id");
 		RESULT = new Identifier(id.toString());
 	:}
 	;

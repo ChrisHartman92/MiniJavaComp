@@ -16,8 +16,10 @@ public class Runner
 		}
 		try
 		{
-			pCup parser_obj = new pCup(new lexxer(new FileInputStream(args[0])));
-			parser_obj.parse();
+			Symbol sy;
+			Program collect;
+			pCup parser_obj = new pCup(new lexxer(new FileInputStream(args[0]))); 
+			sy = parser_obj.parse();
 		}
 		catch (IOException e)
 		{
